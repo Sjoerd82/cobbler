@@ -13,9 +13,8 @@ ncurses-devel
 flex
 bison
 
-bazaar
+bzr
 cvs
 git
 mercurial
-scp
 subversion
