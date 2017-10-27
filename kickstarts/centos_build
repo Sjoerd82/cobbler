@@ -33,13 +33,26 @@ $SNIPPET('samba_shares_build')
 ################################################################################
 # BuildRoot
 
-cat << 'EOF' > /home/buildroot/firstboot.sh
+cat << 'EOF' > /home/buildroot/firstboot-hu.sh
+sudo mount -o remount,exec /tmp
+git config --global user.name "Sjoerd82"
+git config --global user.email "srg.venema@gmail.com"
+
+git clone git://github.com/Sjoerd82/buildroot ~/br-tmp
+
 cd /home/buildroot
 wget https://buildroot.org/downloads/buildroot-2017.08.tar.bz2
 tar xvjf buildroot-2017.08.tar.bz2
 ln -s buildroot-2017.08 buildroot
 
-#cd buildroot
+# the overlay has some files belonging to root, so use sudo:
+shopt -s dotglob nullglob
+sudo cp -r ~/br-tmp/* ~/
+#rm -rf ~/br-tmp
+
+cd buildroot
+make headunit_defconfig
+make all
 
 #tip: "make help" displays all make options
 
