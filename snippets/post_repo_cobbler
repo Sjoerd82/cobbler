@@ -1,0 +1,82 @@
+################################################################################
+# Use local repository (on cobbler.lan)
+#
+
+cat << 'EOF' > /etc/yum.repos.d/CentOS-Base.repo
+# CentOS-Base.repo
+# Uses the local repository at cobbler.lan
+[base]
+name=CentOS-\$releasever - Base
+baseurl=http://cobbler.lan/cobbler/repo_mirror/centos$releasever-$basearch
+#mirrorlist=http://mirrorlist.centos.org/?release=\$releasever&arch=\$basearch&repo=os
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever
+
+#released updates
+[updates]
+name=CentOS-\$releasever - Updates
+baseurl=http://cobbler.lan/cobbler/repo_mirror/centos$releasever-$basearch
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever
+
+#additional packages that may be useful
+[extras]
+name=CentOS-\$releasever - Extras
+baseurl=http://cobbler.lan/cobbler/repo_mirror/centos$releasever-$basearch
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever
+
+#additional packages that extend functionality of existing packages
+[centosplus]
+name=CentOS-\$releasever - Plus
+baseurl=http://cobbler.lan/cobbler/repo_mirror/centos$releasever-$basearch
+gpgcheck=1
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever
+
+#contrib - packages by Centos Users
+[contrib]
+name=CentOS-\$releasever - Contrib
+baseurl=http://cobbler.lan/cobbler/repo_mirror/centos$releasever-$basearch
+gpgcheck=1
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-$releasever
+EOF
+
+# Don't need these:
+rm -f /etc/yum.repos.d/CentOS-Media.repo
+rm -f /etc/yum.repos.d/CentOS-Vault.repo
+
+if [ -e "/etc/yum.repos.d/epel.repo" ]
+then
+
+cat << 'EOF' > /etc/yum.repos.d/epel.repo
+[epel]
+name=Extra Packages for Enterprise Linux $basearch - \$basearch
+baseurl=http://cobbler.lan/cobbler/repo_mirror/epel$releasever-$basearch
+#mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=epel-6&arch=\$basearch
+failovermethod=priority
+enabled=1
+gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$basearch
+
+[epel-debuginfo]
+name=Extra Packages for Enterprise Linux $basearch - \$basearch - Debug
+baseurl=http://cobbler.lan/cobbler/repo_mirror/epel$releasever-$basearch
+#mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-6&arch=\$basearch
+failovermethod=priority
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$basearch
+gpgcheck=1
+
+[epel-source]
+name=Extra Packages for Enterprise Linux $basearch - \$basearch - Source
+baseurl=http://cobbler.lan/cobbler/repo_mirror/epel$releasever-$basearch
+#mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=epel-source-6&arch=\$basearch
+failovermethod=priority
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$basearch
+gpgcheck=1
+EOF
+
+fi

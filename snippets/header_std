@@ -1,0 +1,27 @@
+# Firewall configuration, do not configure any iptable rules
+firewall --disabled
+# Install OS instead of upgrade
+install
+# Set by Cobbler
+url --url=$tree
+# Root password
+rootpw --iscrypted $1$M8EmIxtx$dZRvDFEQnTBoD3/w2/lbv1
+# System authorization information
+auth  --useshadow  --passalgo=sha512 --enablefingerprint
+# Use text mode install
+text
+# System keyboard
+keyboard us
+# System language
+lang en_US
+# SELinux configuration
+selinux --disabled
+# Do not configure the X Window System
+skipx
+# Installation logging level
+#logging --host=log.lan --level=info
+logging --level=debug
+# Power off after finishing
+reboot --eject
+# System timezone
+timezone  Europe/Amsterdam

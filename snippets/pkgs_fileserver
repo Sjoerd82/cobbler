@@ -1,0 +1,17 @@
+%packages --nobase --excludedocs
+@Core --nodefaults
+cifs-utils
+samba
+samba-common
+screen
+ntp
+rsyslog
+wget
+python-mutagen
+
+# Scanning (usbutils is only for troubleshooting)
+usbutils
+sane-backends
+sane-backends-libs
+
+%end

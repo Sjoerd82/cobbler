@@ -1,0 +1,32 @@
+# Default Kickstart configuration
+# Date:   2015-10-05
+# Author: S.R.G. Venema
+#
+# Profile:
+#  OS: CentOS 6
+
+$SNIPPET('header_std')
+
+network  --bootproto=static --device=eth0 --gateway=172.16.8.1 --ip=$ip_address --hostname=$hostname --nameserver=172.16.8.1 --netmask=255.255.248.0 --onboot=on
+
+# Minimum requirements according to PacketFence 5.4 doc.
+# Intel or AMD CPU 3 GHz
+# 8GB RAM
+# 100 GB disk space (RAID-1 recommended)
+# 1 Network card (2 recommended)
+
+# Choose disk size:
+$SNIPPET('lvm_12gb')
+
+# Packages
+%packages --nobase --excludedocs
+$SNIPPET('pkgs_default')
+%end
+
+# Post
+%post --log=/var/tmp/kickstart-post.log --erroronfail
+$SNIPPET('post_default')
+$SNIPPET('post_repo_packetfence')
+$SNIPPET('post_packetfence')
+
+%end

@@ -1,0 +1,47 @@
+%packages --nobase --excludedocs
+
+# --nodefaults doesn't seem to work on CentOS7; we will provide some excluded packages
+@Core --nodefaults
+-aic94xx-firmware*
+-alsa-*
+-biosdevname
+-btrfs-progs*
+-dhclient
+-dhcp*
+-dracut-network
+-iprutils
+-ivtv*
+-iwl*firmware
+-libertas*
+-kexec-tools
+#-NetworkManager*
+-plymouth*
+-postfix
+
+screen
+ntp
+rsyslog
+wget
+
+# FreeRadius
+freeradius
+freeradius-utils
+
+# ChilliSpot
+libc.so.6
+perl-Digest-MD5
+
+# HTTP (Captive Portal)
+httpd
+
+# MYSQL (Captive Portal)
+mysql
+mysql-server
+php
+php-gd
+php-mysql
+
+# HTTPS
+mod_ssl openssl
+
+%end

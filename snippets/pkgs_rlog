@@ -1,0 +1,49 @@
+%packages --nobase --excludedocs
+@Core --nodefaults
+rsyslog
+
+#syslog to database
+mysql-server
+
+#syslog analyzer
+httpd
+php
+php-mysql
+php-gd
+
+#snort
+gcc
+flex
+bison
+zlib
+zlib-devel
+libpcap
+libpcap-devel
+pcre
+pcre-devel
+tcpdump
+#from EPEL:
+#libdnet -- these do not work with snort
+#libdnet-devel -- "
+gcc-c++
+#rpmbuild #?
+
+#pulledpork
+perl-Crypt-SSLeay
+perl-libwww-perl
+perl-Archive-Tar
+
+#barnyard2
+git
+libtool
+mysql-devel
+
+#BASE (EPEL)
+#php-adodb #?
+php-pear
+#apache2 libapache2-mod-php5 php5 php5-mysql php5-common php5-gd php5-cli php-pear unzip
+
+#core utils
+screen
+wget
+%end

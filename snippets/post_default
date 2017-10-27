@@ -1,0 +1,68 @@
+PATH=$PATH:/sbin:/usr/sbin:/bin:/usr/bin
+export PATH
+
+# define path varibles
+ROOT=
+
+# define log path
+KSLOG="${ROOT}/var/tmp/kickstart.log"
+
+echo test >> ${KSLOG}
+echo cat /etc/resolv.conf >> ${KSLOG}
+echo "nameserver 172.16.8.1" >> /etc/resolv.conf
+
+# ##############################################################################
+# Disable SELINUX
+
+echo SELINUX=disabled > /etc/selinux/config
+
+# ##############################################################################
+# RSYSLOG
+#
+
+# Provides UDP forwarding. The IP is the server's IP address
+echo "*.* @@rlog.lan:514" >> /etc/rsyslog.conf
+
+# start rsyslog on boot
+chkconfig rsyslog on
+
+# ##############################################################################
+# NTP Client
+#
+# Point to NTP server on the OpenWRT router
+sed -i 's/^server\s/#server /g' /etc/ntp.conf
+cat << 'EOF' >> /etc/ntp.conf
+
+# Get time from OpenWRT (pool.ntp.org)
+server openwrt.lan
+EOF
+
+# Run daemon on boot
+chkconfig ntpd on
+
+# ##############################################################################
+# Disable console blanking
+# Blanking and powerdown is useful when a screen is attached, but only annoying
+# when it isn't.
+
+echo setterm -blank 0 -powerdown 0 >> /etc/rc.local
+# echo setterm -blank 0 >> /etc/rc.local # not enough, apparently..
+
+# ##############################################################################
+# SSHD Banner
+#
+
+cat << 'EOF' > /etc/ssh/banner_short.txt
+**********************************  WARNING!  *********************************
+                     This is a private communication system.
+                Unauthorized access or use may lead to prosecution.
+             If not authorized to access this system, disconnect NOW!
+*******************************************************************************
+EOF
+
+sed -i 's/#Banner none/Banner \/etc\/ssh\/banner_short.txt/g' /etc/ssh/sshd_config
+
+# ##############################################################################
+# Configure .bashrc
+#
+# TODO

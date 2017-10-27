@@ -1,0 +1,28 @@
+#  PARTITIONING
+#
+#  LVM with hardened partitions
+#  6GB (3700MB log space)
+#
+
+# System bootloader configuration
+bootloader --append="crashkernel=auto rhgb quiet" --location=mbr --driveorder="vda"
+
+# Clear the MBR. Helps avoid problems with MBR.
+zerombr
+
+# Partition clearing information, we require: vda.
+clearpart --drives=vda --all
+
+# Setup LVM (6GB/6144MB disk):
+
+part  /boot     --asprimary  --size=128
+part  pv.01                  --size=5008
+part  swap                   --size=1000
+
+volgroup vg_root pv.01
+logvol /              --vgname=vg_root --size=1500 --name=lv_root     --fstype=ext4
+logvol /free          --vgname=vg_root --size=88   --name=lv_free     --fstype=ext3        --fsoptions=nodev
+logvol /tmp           --vgname=vg_root --size=10   --name=lv_tmp      --fstype=ext3 --grow --fsoptions=nodev,nosuid,noexec --maxsize=100
+logvol /var/log       --vgname=vg_root --size=500  --name=lv_log      --fstype=ext3 --grow --fsoptions=nodev               --maxsize=3200
+logvol /var/log/audit --vgname=vg_root --size=10   --name=lv_auditlog --fstype=ext3 --grow --fsoptions=nodev               --maxsize=100
+

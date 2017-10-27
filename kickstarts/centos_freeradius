@@ -1,0 +1,26 @@
+# Default Kickstart configuration
+# Date:   2015-09-11
+# Author: S.R.G. Venema
+#
+# KVM requirements:
+#  Disk: 4GB (vda)
+#
+# Requirements:
+#
+# Profile:
+#  OS: CentOS 6, 7
+
+$SNIPPET('header_std')
+
+network  --bootproto=static --device=link --gateway=172.16.8.1 --ip=$ip_address --hostname=$hostname --nameserver=172.16.8.1 --netmask=255.255.248.0 --onboot=on
+
+$SNIPPET('lvm_4gb')
+$SNIPPET('pkgs_freeradius')
+
+%post --log=/var/tmp/kickstart-post.log --erroronfail
+$SNIPPET('post_default')
+$SNIPPET('post_freeradius')
+
+$SNIPPET('post_webserver')
+$SNIPPET('post_mysql')
+%end

@@ -1,0 +1,32 @@
+# Default Kickstart configuration
+# Date:   2015-09-15
+# Author: S.R.G. Venema
+#
+# Profile:
+#  OS: CentOS 6 or 7
+
+$SNIPPET('header_std')
+
+network  --bootproto=dhcp --device=eth0 --gateway=172.16.8.1 --nameserver=172.16.8.1 --netmask=255.255.248.0 --onboot=on
+
+network  --bootproto=static --device=eth0 --gateway=172.16.8.1 --ip=$ip_address --hostname=$hostname --nameserver=172.16.8.1 --netmask=255.255.248.0 --onboot=on
+
+# Choose disk size:
+$SNIPPET('lvm_4gb')
+# SNIPPET('lvm_5gb')
+# SNIPPET('lvm_6gb')
+# SNIPPET('lvm_6gb_biglog_3gb')
+# SNIPPET('lvm_12gb')
+# SNIPPET('lvm_50gb')
+
+$SNIPPET('pkgs_default')
+
+# Choose additional packages:
+# SNIPPET('pkgs_')
+# SNIPPET('pkgs_')
+# SNIPPET('pkgs_')
+# SNIPPET('pkgs_')
+
+%post --log=/var/tmp/kickstart-post.log --erroronfail
+$SNIPPET('post_default')
+%end

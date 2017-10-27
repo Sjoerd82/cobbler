@@ -1,0 +1,58 @@
+# Default Kickstart configuration
+# Date:   2016-01-02
+# Author: S.R.G. Venema
+#
+# KVM requirements:
+#  Disk: 20GB (vda)
+#
+# Requirements:
+#
+# Profile:
+#  OS: CentOS 6
+
+$SNIPPET('header_std')
+
+network  --bootproto=static --device=eth0 --gateway=172.16.8.1 --ip=$ip_address --hostname=$hostname --nameserver=172.16.8.1 --netmask=255.255.248.0 --onboot=on
+
+$SNIPPET('lvm_28gb')
+
+# Packages
+%packages --nobase --excludedocs
+$SNIPPET('pkgs_default')
+$SNIPPET('pkgs_build')
+$SNIPPET('pkgs_samba')
+%end
+
+%post --log=/var/tmp/kickstart-post.log --erroronfail
+$SNIPPET('user_buildroot')
+$SNIPPET('post_default')
+$SNIPPET('post_samba')
+$SNIPPET('samba_shares_build')
+
+
+################################################################################
+# BuildRoot
+
+cat << 'EOF' > /home/buildroot/firstboot.sh
+cd /home/buildroot
+wget https://buildroot.org/downloads/buildroot-2017.08.tar.bz2
+tar xvjf buildroot-2017.08.tar.bz2
+ln -s buildroot-2017.08 buildroot
+
+#cd buildroot
+
+#tip: "make help" displays all make options
+
+#make list-defconfigs
+#make raspberrypi0_defconfig
+#make all
+
+#/bin/cat /etc/crontab | /bin/grep -v firstboot > /etc/crontab.tmp
+#/bin/rm -f /etc/crontab
+#/bin/mv /etc/crontab.tmp /etc/crontab
+#rm -f $0
+
+EOF
+chmod +x /home/buildroot/firstboot.sh
+
+%end

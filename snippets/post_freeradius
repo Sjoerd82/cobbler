@@ -1,0 +1,26 @@
+# ##############################################################################
+# FREERADIUS
+#
+
+cat << 'EOF' >> /etc/raddb/clients.conf
+client radius.lan {
+       ipaddr          = 172.16.8.20
+       secret          = kungfu
+}
+
+EOF
+
+# TODO: REMOVE/COMMENT localhost
+
+cat << 'EOF' >> /etc/raddb/users
+testing Cleartext-Password := "password"
+EOF
+
+chkconfig radiusd on
+service radiusd start
+
+
+# ##############################################################################
+# HTTP (UAM) - Use for captive portal login, if needed
+#
+

@@ -1,0 +1,13 @@
+################################################################################
+# MYSQL (basic configuration)
+#
+
+service mysqld start
+
+mysqladmin -u root password 'kungfu'
+chkconfig mysqld on
+
+# remove test database and anonymous user (cannot be ran unattended)
+#/usr/bin/mysql_secure_installation
+
+# n Y n Y Y

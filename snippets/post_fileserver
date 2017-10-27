@@ -1,0 +1,13 @@
+################################################################################
+# SANE - Scanner
+#
+
+# cp /etc/sane.d/dll.conf /etc/sane.d/dll.conf.bu
+# echo genesys > /etc/sane.d/dll.conf
+
+# Don't forget to add the usb device to the QEMU config on the hypervisor.
+# e.g.
+# /etc/pve/qemu-server/214.conf
+# usb0: host=04a9:2220
+
+

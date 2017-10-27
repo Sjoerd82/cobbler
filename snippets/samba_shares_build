@@ -1,0 +1,13 @@
+cat << 'EOF' >> /etc/samba/smb.conf
+
+#============================ Share Definitions ==============================
+
+[buildroot]
+   comment = Buildroot output
+   path = /home/buildroot/buildroot/output
+   guest ok = yes
+   browseable = yes
+   read only = no
+   veto files = /lost+found/
+
+EOF

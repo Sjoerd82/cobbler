@@ -1,0 +1,6 @@
+rpm -ivh http://www.chillispot.org/download/chillispot-1.1.0.i386.rpm
+
+mkdir /var/www/html/hotspotlogin
+cp /usr/share/doc/chillispot-1.1.0/hotspotlogin.cgi /var/www/html/hotspotlogin
+
+# TODO set $uamsecret, $userpasswd=1

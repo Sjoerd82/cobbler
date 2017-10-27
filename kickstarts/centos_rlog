@@ -1,0 +1,22 @@
+# Default Kickstart configuration
+# Date:   2015-09-11
+# Author: S.R.G. Venema
+#
+# Profile:
+#  OS: CentOS 6
+
+$SNIPPET('header_std')
+
+network  --bootproto=static --device=eth0 --gateway=172.16.8.1 --ip=$ip_address --hostname=$hostname --nameserver=172.16.8.1 --netmask=255.255.248.0 --onboot=on
+
+$SNIPPET('lvm_6gb_biglog_3gb')
+$SNIPPET('pkgs_rlog')
+
+%post --log=/var/tmp/kickstart-post.log --erroronfail
+$SNIPPET('post_default')
+$SNIPPET('post_mysql')
+$SNIPPET('post_rlog')
+
+# repodata
+
+%end

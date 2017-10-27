@@ -1,0 +1,6 @@
+cat << 'EOF' > /etc/yum.repos.d/PacketFence.repo
+[PacketFence]
+name=PacketFence Repository
+baseurl=http://inverse.ca/downloads/PacketFence/CentOS$releasever/$basearch
+gpgcheck=0
+EOF

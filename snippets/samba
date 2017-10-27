@@ -1,0 +1,352 @@
+cat << 'EOF' > /etc/samba/smb.conf
+#======================= Global Settings =====================================
+
+[global]
+
+# ----------------------- Network Related Options -------------------------
+#
+# workgroup = NT-Domain-Name or Workgroup-Name, eg: MIDEARTH
+#
+# server string is the equivalent of the NT Description field
+#
+# netbios name can be used to specify a server name not tied to the hostname
+#
+# Interfaces lets you configure Samba to use multiple interfaces
+# If you have multiple network interfaces then you can list the ones
+# you want to listen on (never omit localhost)
+#
+# Hosts Allow/Hosts Deny lets you restrict who can connect, and you can
+# specifiy it as a per share option as well
+#
+
+        workgroup = WORKGROUP
+        server string = $hostname (KVM)
+        netbios name = FILE
+
+        ; interfaces = 192.168.12.2/24 192.168.13.2/24 127.0.0.0/8 eth0
+        ; remote announce = 92.168.1.255 192.168.2.44
+        ; domain logons = yes
+        ; hosts deny = all
+
+
+# Windows Internet Name Serving Support Section:
+#
+        # WINS Support - Tellse the NMBD components of Samba to enable its WINS Server
+        wins support = yes
+
+        # What naming service and in what order should we use to resolve host names to IP addresses
+        name resolve order = wins lmhosts hosts bcast
+        dns proxy = yes
+
+        # unknown option:
+        display charset = LOCALE
+
+        # charset of the machine samba runs on
+        unix charset = UTF-8
+
+        # charset to use for DOS clients
+        dos charset = CP850
+
+# ----------------------- Standalone Server Options ------------------------
+#
+# Security can be set to user, share(deprecated) or server(deprecated)
+#
+# Backend to store user information in. New installations should
+# use either tdbsam or ldapsam. smbpasswd is available for backwards
+# compatibility. tdbsam requires no further configuration.
+#
+# Backends:
+#  - smbpasswd (deprecated)
+#  - tdbsam: Users must be added using pdbedit
+#  - ldapsam: Users must be added in LDAP.
+#
+# Username map contains a mapping between unix and non-unix users.
+#
+# Encrypted passwords are the default for Windows machines.
+#
+
+        security = user
+        passdb backend = tdbsam
+
+        # This boolean parameter controls whether Samba attempts to
+        # synchronize the UNIX password with the SMB password when the
+        # encrypted SMB password in the smbpasswd file is changed. If this is
+        # set to yes the program specified in the passwd program parameter
+        # is called AS ROOT - to allow the new UNIX password to be set without
+        # access to the old UNIX password (as the SMB password change code has
+        # no access to the old password cleartext, only the new).
+        unix password sync = yes
+        passwd program = /usr/bin/passwd %u
+        passwd chat = *New*password* %n\n *Retype*new*password* %n\n *passwd:*all*authentication*tokens*updated*successfully*
+
+        # username map contains a mapping between unix and non-unix users.
+        username map = /etc/samba/smbusers
+
+        # encrypted passwords are the default for Windows machines.
+        encrypt passwords = yes
+
+        # PAM is ignored when encrypt password = yes
+        ; obey pam restrictions = yes
+        ; pam password change = yes
+
+        # This option controls what to do with unsuccessful authentication
+        # attempts. The four settings are:
+        #  - Never:        Means user login requests with an invalid
+        #                  password are rejected. This is the default.
+        #  - Bad User:     Means user logins with an invalid password are
+        #                  rejected, unless the username does not exist, in
+        #                  which case it is treated as a guest login and
+        #                  mapped into the guest account.
+        #  - Bad Password: Means user logins with an invalid password are
+        #                  treated as a guest login and mapped into the guest
+        #                  account. Note that this can cause problems as it
+        #                  means that any user incorrectly typing their
+        #                  password will be silently logged on as "guest" -
+        #                  and will not know the reason they cannot access
+        #                  files they think they should - there will have
+        #                  been no message given to them that they got
+        #                  their password wrong. Helpdesk services will hate
+        #                  you if you set the map to guest parameter this
+        $                  way :-).
+        # Bad Uid:         Is only applicable when Samba is configured in
+        #                  some type of domain mode security (security = {domain|ads})
+        #
+        map to guest = Never
+
+        # Username which will be used for access to services which are
+        # specified as "guest ok".
+        #guest account = nobody
+
+# --------------------------- Logging Options -----------------------------
+#
+# Log File let you specify where to put logs and how to split them up.
+#
+# Max Log Size let you specify the max size log files should reach
+
+        # If set to yes then Samba debug messages are logged into the system
+        # syslog only, and not to the debug log files. There still will be
+        # some logging to log.[sn]mbd even if syslog only is enabled.
+        syslog only = no
+
+        # The syslog parameter maps how Samba debug messages are logged onto
+        # the system syslog logging levels. Samba debug level zero maps onto
+        # syslog LOG_ERR, debug level one maps onto LOG_WARNING, debug level
+        # two maps onto LOG_NOTICE, debug level three maps onto LOG_INFO.
+        # All higher levels are mapped to LOG_DEBUG.
+        syslog = 1
+
+        # logs split per machine
+        ;log file = /var/log/samba/log.%m
+        log file = /var/log/samba/%m.log
+
+        # max 50KB per log file, then rotate (0 would be unlimited)
+        ;max log size = 0
+        max log size = 50
+
+        # Do something sensible when smbd or nmbd crashes
+        ; panic action = /usr/share/samba/panic-action %d
+
+# ----------------------- Browser Control Options ----------------------------
+#
+# set local master to no if you don't want Samba to become a master
+# browser on your network. Otherwise the normal election rules apply
+#
+# OS Level determines the precedence of this server in master browser
+# elections. The default value should be reasonable
+#
+# Preferred Master causes Samba to force a local browser election on startup
+# and gives it a slightly higher chance of winning the election
+;       local master = no
+;       os level = 33
+;       preferred master = yes
+
+        local master = no
+        preferred master = no
+        os level = 0
+
+# --------------------------- Printing Options -----------------------------
+#
+# Load Printers let you load automatically the list of printers rather
+# than setting them up individually
+#
+# Cups Options let you pass the cups libs custom options, setting it to raw
+# for example will let you use drivers on your Windows clients
+#
+# Printcap Name let you specify an alternative printcap file
+#
+# You can choose a non default printing system using the Printing option
+
+#        # no printing services
+#        load printers = no
+#        ; cups options = raw
+
+#        ; printcap name = /etc/printcap
+#        #obtain list of printers automatically on SystemV
+#        ; printcap name = lpstat
+#        ; printing = cups
+
+printing = bsd
+printcap name = /dev/null
+
+# --------------------------- Filesystem Options ---------------------------
+#
+# The following options can be uncommented if the filesystem supports
+# Extended Attributes and they are enabled (usually by the mount option
+# user_xattr). Thess options will let the admin store the DOS attributes
+# in an EA and make samba not mess with the permission bits.
+#
+
+        # Allow access via symbolic links
+        unix extensions = no
+        wide links = yes
+        follow symlinks = yes
+
+# Note: these options can also be set just per share, setting them in global
+# makes them the default for all shares
+
+;       map archive = no
+;       map hidden = no
+;       map read only = no
+;       map system = no
+;       store dos attributes = yes
+
+# ------------------------------ Misc. Options ------------------------------
+
+# Using the following line enables you to customise your configuration on a
+# per machine basis. The %m gets replaced with the netbios name of the
+# machine that is connecting.
+; include = /home/samba/etc/smb.conf.%m
+
+# --------------------------- Performance Options ---------------------------
+
+# Enable Async IO (AIO)
+;socket options=SO_RCVBUF=8192 SO_SNDBUF=8192 TCP_NODELAY
+socket options=SO_RCVBUF=131072 SO_SNDBUF=131072 TCP_NODELAY
+
+min receivefile size = 16384
+use sendfile = true
+aio read size = 16384
+aio write size = 16384
+#aio write behind = true <--- NOTE!!!: Only use with extreme caution.
+
+
+#============================ Share Definitions ==============================
+
+# Guest (Read/Write) shares:
+
+#[data_in]
+#   comment = Upload your music here!
+#   path = /export/data1/music/in
+#   guest ok = yes
+#   browseable = yes
+#   read only = no
+
+# Read only shares:
+
+[music]
+   comment = Music
+   path = /mnt/music
+   guest ok = yes
+   browseable = yes
+   read only = no
+   veto files = /lost+found/
+
+[movies]
+   comment = Movies
+   path = /mnt/movies
+   guest ok = yes
+   browseable = yes
+   read only = yes
+   veto files = /lost+found/
+
+[series]
+   comment = Series
+   path = /mnt/series
+   guest ok = yes
+   browseable = yes
+   read only = no
+   veto files = /lost+found/
+
+[software]
+   comment = Software and Drivers
+   path = /mnt/software
+   guest ok = yes
+   browseable = yes
+   read only = no
+   writable = yes
+   veto files = /lost+found/
+
+[torrents]
+   comment = Completed Torrents
+   path = /mnt/dload/torrents
+   guest ok = yes
+   browseable = yes
+   read only = no
+   hosts allow = 172.16.8.0/21
+   #directory mask = 0777
+   #create mask = 0644
+
+[misc]
+   comment = Misc
+   path = /mnt/misc
+   guest ok = yes
+   browseable = yes
+   read only = no
+   veto files = /lost+found/
+
+[photo]
+   comment = Photo's
+   path = /mnt/photo
+   guest ok = yes
+   browseable = yes
+   read only = no
+   veto files = /lost+found/
+
+[lightroom]
+   comment = Lightroom
+   path = /mnt/photo_raw
+   guest ok = yes
+   browseable = yes
+   read only = no
+   veto files = /lost+found/
+
+[backup1]
+  comment = Backup for Getac
+  path = /mnt/backup/1
+  guest ok = yes
+  browseable = yes
+  read only = no
+
+[video]
+  comment = Video
+  path = /mnt/video
+  guest ok = no
+  browseable = yes
+  read only = no
+  veto files = /lost+found/
+
+[games]
+   comment = Games
+   path = /mnt/games
+   guest ok = yes
+   browseable = yes
+   read only = no
+   writable = yes
+   veto files = /lost+found/
+
+EOF
+
+cat << 'EOF' > /etc/samba/smbusers
+# Unix_name = SMB_name1 SMB_name2 ...
+root = administrator admin
+nobody = guest pcguest smbguest
+EOF
+
+# create samba users
+echo -e "kungfu\nkungfu" | smbpasswd -s -a root
+echo -e "rachel\nrachel" | smbpasswd -s -a transmission
+
+# start at boot:
+sudo chkconfig smb on
+sudo chkconfig nmb on
+

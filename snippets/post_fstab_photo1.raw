@@ -1,0 +1,17 @@
+# add virtual drives to fstab
+
+# Column:
+# 1: file system (UUID, or /dev/..)
+# 2: mount point
+# 3: type
+# 4: options (comma separated, see documentation)
+# 5: dump (no longer relevant)
+# 6: fsck order (0..2)
+#    0 = it will not be fsck'ed.
+#    1 = reserved for the root filesystem, it must be fsck'ed before the other drives.
+#    2 = fsck, after drives with value 1 have finished.
+
+cat << 'EOF' >> /etc/fstab
+UUID=61c55d9b-05aa-4386-bd80-ab6f6cd1704b	/mnt/photo	ext3	defaults	0 2
+EOF
+

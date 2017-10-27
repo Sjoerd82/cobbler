@@ -1,0 +1,4 @@
+useradd buildroot -p '$1$M8EmIxtx$dZRvDFEQnTBoD3/w2/lbv1'
+
+#allow sudo
+echo "buildroot	ALL=(ALL)	ALL" >> /etc/sudoers
