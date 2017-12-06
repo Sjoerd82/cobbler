@@ -12,6 +12,7 @@ git
 ncurses-devel
 flex
 bison
+dosfstools
 
 bzr
 cvs
