@@ -16,6 +16,7 @@ flex
 bison
 ed
 java
+dosfstools
 
 bzr
 cvs
