@@ -1,0 +1,358 @@
+# Default Kickstart configuration
+# Date:   2018-02-24
+# Author: S.R.G. Venema
+#
+# KVM requirements:
+#  Disk: 28GB (vda)
+#
+# Requirements:
+#
+# Profile:
+#  OS: CentOS 7
+
+# BUILDROOT 2018-02-rc3
+
+$SNIPPET('header_std')
+
+network  --bootproto=static --device=ens18 --gateway=172.16.8.1 --ip=$ip_address --hostname=$hostname --nameserver=172.16.8.1 --netmask=255.255.248.0 --onboot=on
+
+$SNIPPET('lvm_28gb')
+
+# Packages
+%packages --nobase --excludedocs
+$SNIPPET('pkgs_default')
+$SNIPPET('pkgs_build')
+$SNIPPET('pkgs_samba')
+%end
+
+%post --log=/var/tmp/kickstart-post.log --erroronfail
+$SNIPPET('user_buildroot')
+$SNIPPET('post_default')
+$SNIPPET('post_samba')
+$SNIPPET('samba_shares_build')
+
+# ##############################################################################
+# BuildRoot
+
+cat << 'EOF' > /home/buildroot/firstboot.sh
+#!/bin/bash
+BR_VERSION=2018.02-rc3
+
+echo "This script will do the following:"
+echo "1. Remount /tmp with exec"
+echo "2. ssh-keygen"
+echo "3. Configure git for use with github, Sjoerd82"
+echo "4. Download and unzip Buildroot $BR_VERSION"
+echo ""
+read -p ">> Continue? (y/n)" answer
+case \${answer:0:1} in
+    y|Y )
+        echo "Continueing..."
+    ;;
+    n|N )
+        exit
+    ;;
+    *)
+        exit
+    ;;
+esac
+
+sudo mount -o remount,exec /tmp
+
+ssh-keygen -t rsa -b 4096 -C "srg.venema@gmail.com"
+git config --global user.name "Sjoerd82"
+git config --global user.email "srg.venema@gmail.com"
+
+cd /home/buildroot
+wget https://buildroot.org/downloads/buildroot-$BR_VERSION.tar.bz2
+tar xvjf buildroot-$BR_VERSION.tar.bz2
+ln -s buildroot-$BR_VERSION buildroot
+
+echo "Go to https://github.com/settings/keys and add key:"
+cat /home/buildroot/.ssh/id_rsa.pub
+
+read -p ">> Remove $0? (y/n)? " answer
+case \${answer:0:1} in
+      y|Y )
+        rm -- "$0"
+      ;;
+      * )
+        exit
+      ;;
+esac
+
+EOF
+chmod +x /home/buildroot/firstboot.sh
+
+# ------------------------------------------------------------------------------
+
+cat << 'EOF' > /home/buildroot/gitup.sh
+#!/bin/bash
+
+BRHOME=home/buildroot
+GITTMP=br-tmp
+BUILDR=buildroot-2017.08
+
+# check arguments
+if [ $# != 1 ]; then
+  echo "UPLOADER"
+  echo "This script will upload all customizations to github"
+  echo "Usage: $0 <br version on git>"
+  echo "Ex. $0 2018.02"
+  exit
+else
+  BUILDR=buildroot-$1
+  echo "Uploading for installed version: $BUILDR"
+fi
+
+# check if br directory exists
+if [ ! -d "/$BRHOME/$BUILDR" ]; then
+  echo "Not found: /$BRHOME/$BUILDR"
+  exit
+fi
+
+# check if git directory exists
+if [ ! -d "/$BRHOME/$GITTMP" ]; then
+  read -p "Git directory not found. Do you want to clone (y/n)? " answer
+  case \${answer:0:1} in
+      y|Y )
+          git clone git://github.com/Sjoerd82/buildroot /$BRHOME/$GITTMP
+          BRTMP_CREATED=1
+          break
+      ;;
+      * )
+          exit
+      ;;
+  esac
+fi
+
+# check if BR version already in git
+if [ ! -d "/$BRHOME/$GITTMP/$BUILDR" ]; then
+  echo "Buildroot $BUILDR does not exist yet in github"
+else
+  echo "Buildroot $BUILDR already exist in github"
+fi
+
+read -p ">> Continue? (y/n)? " answer
+case \${answer:0:1} in
+      y|Y )
+        echo "Continuing..."
+      ;;
+      * )
+          exit
+      ;;
+esac
+
+# update defconfig
+echo "Updating configs/headunit_defconfig"
+make savedefconfig BR2_DEFCONFIG=configs/headunit_defconfig
+
+# buildroot:
+BR_DEFCFG=/$BRHOME/$BUILDR/configs/headunit_defconfig
+BR_BOARD=/$BRHOME/$BUILDR/board/arctura
+BR_PCKG=/$BRHOME/$BUILDR/package/arctura
+BR_CONFIG=/$BRHOME/$BUILDR/package/Config.in
+
+# br-tmp:
+GIT_DEFCFG=/$BRHOME/$GITTMP/$BUILDR/configs/headunit_defconfig
+GIT_BOARD=/$BRHOME/$GITTMP/$BUILDR/board/arctura/
+GIT_PCKG=/$BRHOME/$GITTMP/$BUILDR/package/arctura/
+GIT_CONFIG=/$BRHOME/$GITTMP/$BUILDR/package/Config.in
+
+if [ ! -d /$BRHOME ]; then
+  echo "FATAL: Home directory not found: $BRHOME"
+  exit
+fi
+
+if [ ! -d /$BRHOME/$BUILDR ]; then
+  echo "FATAL: Buildroot Directory not found: $BRHOME/$BUILDR"
+  exit
+fi
+
+# just in case...
+mkdir -p /$BRHOME/$GITTMP/$BUILDR/configs
+mkdir -p $GIT_BOARD
+mkdir -p $GIT_PCKG
+
+echo Buildroot:
+echo $BR_DEFCFG
+echo $BR_BOARD
+echo $BR_PCKG
+echo $BR_CONFIG
+
+echo Git:
+echo $GIT_DEFCFG
+echo $GIT_BOARD
+echo $GIT_PCKG
+echo $GIT_CONFIG
+
+# cleanup
+echo Removing files from git directory
+rm -f $GIT_DEFCFG
+rm -rf $GIT_BOARD
+rm -rf $GIT_PCKG
+rm -f $GIT_CONFIG
+
+# copy to git dir
+echo copying files from buildroot to git directory
+cp $BR_DEFCFG $GIT_DEFCFG
+cp -r $BR_BOARD $GIT_BOARD
+cp -r $BR_PCKG $GIT_PCKG
+cp $BR_CONFIG $GIT_CONFIG
+
+# push to github?
+read -n 1 -p "Push to Github? (y/n) " answer
+case \${answer:0:1} in
+    y|Y )
+        echo Yes
+    ;;
+    * )
+        exit
+    ;;
+esac
+
+# pushing to github
+
+cd /$BRHOME/$GITTMP
+git add *
+git commit -a
+git remote set-url origin git@github.com:Sjoerd82/buildroot.git
+git push
+
+EOF
+chmod +x /home/buildroot/gitup.sh
+
+# ------------------------------------------------------------------------------
+
+cat << 'EOF' > /home/buildroot/gitdn.sh
+#!/bin/bash
+
+BRHOME=home/buildroot
+GITTMP=br-tmp
+
+# check arguments
+echo "Use to download from github..."
+echo "This script will do the following:"
+echo "1. Clone repository, if it doesn't exist yet (will ask)."
+echo "2. Pull latest version."
+echo "3. Delete installed Buildroot customizations."
+echo "4. Copy downloaded Buildroot customizations."
+echo "5. Patch Config.in. (TODO) (will ask)"
+echo "6. Run make headunit_defconfig (will ask)"
+echo ""
+echo "Usage: $0 <br git version> <br installed version>"
+if [ $# != 2 ]; then
+  echo "Ex. $0 2017.08 2017.08"
+  echo "Ex. $0 2017.08 2018.02-rc3"
+  exit
+else
+  BUILDR_GIT=buildroot-$1
+  BUILDR_INS=buildroot-$2
+  echo "Git version: $BUILDR_GIT"
+  echo "Installed version: $BUILDR_INS"
+fi
+
+# check if git directory exists
+BRTMP_CREATED=0
+if [ ! -d "/$BRHOME/$GITTMP" ]; then
+  read -p "Git directory not found. Do you want to clone (y/n)? " answer
+  case \${answer:0:1} in
+      y|Y )
+          git clone git://github.com/Sjoerd82/buildroot /$BRHOME/$GITTMP
+          BRTMP_CREATED=1
+          break
+      ;;
+      * )
+          exit
+      ;;
+  esac
+else
+  # pull in the latest version
+  cd /$BRHOME/$GITTMP
+  git pull
+fi
+
+# check if buildroot directories exist
+if [ ! -d "/$BRHOME/$GITTMP/$BUILDR_GIT" ]; then
+  echo "Not found (git): /$BRHOME/$GITTMP/$BUILDR_GIT"
+  exit
+fi
+
+if [ ! -d "/$BRHOME/$BUILDR_INS" ]; then
+  echo "Not found (installation): /$BRHOME/$BUILDR_INS"
+  exit
+fi
+
+# buildroot:
+BR_DEFCFG=/$BRHOME/$BUILDR_INS/configs/headunit_defconfig
+BR_BOARD=/$BRHOME/$BUILDR_INS/board/arctura
+BR_PCKG=/$BRHOME/$BUILDR_INS/package/arctura
+BR_CONFIG=/$BRHOME/$BUILDR_INS/package/Config.in
+
+# br-tmp:
+GIT_DEFCFG=/$BRHOME/$GITTMP/$BUILDR_GIT/configs/headunit_defconfig
+GIT_BOARD=/$BRHOME/$GITTMP/$BUILDR_GIT/board/arctura/
+GIT_PCKG=/$BRHOME/$GITTMP/$BUILDR_GIT/package/arctura/
+GIT_CONFIG=/$BRHOME/$GITTMP/$BUILDR_GIT/package/Config.in
+
+echo Buildroot:
+echo $BR_DEFCFG
+echo $BR_BOARD
+echo $BR_PCKG
+
+# remove from buildroot:
+rm -f $BR_DEFCFG
+rm -rf $BR_BOARD
+rm -rf $BR_PCKG
+
+# copy back to buildroot:
+cp $GIT_DEFCFG $BR_DEFCFG
+cp -r $GIT_BOARD $BR_BOARD
+cp -r $GIT_PCKG $BR_PCKG
+
+# copy back the Config.in or modify?
+echo "Overwrite Config.in if same Buildroot version."
+echo "For migrations to a newer version add menu instead (at line 11, check Config.in!)."
+echo "vi $BR_CONFIG"
+read -p "Overwrite Config.in or add Arctura menu? (o/a/c) " answer
+case \${answer:0:1} in
+    o|O )
+        rm -f $BR_CONFIG
+        cp $GIT_CONFIG $BR_CONFIG
+    ;;
+    a|A )
+        echo "Adding Arctura menu"
+        ed /home/buildroot/buildroot/package/Config.in << END
+11i
+menu "Arctura"
+         source "package/arctura/Config.in"
+endmenu
+
+.
+w
+q
+END
+    ;;
+esac
+
+# if it seems to be the first time running, ask to create default config
+if [ $BRTMP_CREATED == 1 ]; then
+  read -p "New server? Want to run 'make headunit_defconfig' (y/n)? " answer
+  case \${answer:0:1} in
+      y|Y )
+          cd buildroot
+          make headunit_defconfig
+      ;;
+      * )
+          exit
+      ;;
+  esac
+fi
+
+echo "Restoring headunit_defconfig"
+make headunit_defconfig
+
+EOF
+chmod +x /home/buildroot/gitdn.sh
+
+%end

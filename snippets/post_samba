@@ -35,7 +35,8 @@ cat << 'EOF' > /etc/samba/smb.conf
         wins support = yes
 
         # What naming service and in what order should we use to resolve host names to IP addresses
-        name resolve order = wins lmhosts hosts bcast
+        #name resolve order = wins lmhosts hosts bcast # stopped working 2019-01-13
+        name resolve order = wins lmhosts bcast
         dns proxy = yes
 
         # unknown option:

@@ -8,7 +8,7 @@
 bootloader --append="crashkernel=auto rhgb quiet" --location=mbr --driveorder="vda"
 
 # Clear the MBR. Helps avoid problems with MBR.
-zerombr yes
+zerombr
 ignoredisk --only-use=vda
 
 # Partition clearing information, we require: vda.

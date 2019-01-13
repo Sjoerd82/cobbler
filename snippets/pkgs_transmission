@@ -1,0 +1,5 @@
+autofs
+unzip
+
+#EPEL:
+transmission-daemon

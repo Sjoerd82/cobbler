@@ -1,0 +1,7 @@
+cat << 'EOF' >> /etc/samba/smb.conf
+
+#============================ Share Definitions ==============================
+
+# None
+
+EOF

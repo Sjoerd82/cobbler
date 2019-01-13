@@ -3,6 +3,8 @@ patch
 bzip2
 perl
 perl-devel
+perl-Data-Dumper
+perl-Thread-Queue
 tar
 python
 unzip
@@ -12,6 +14,8 @@ git
 ncurses-devel
 flex
 bison
+ed
+java
 
 bzr
 cvs

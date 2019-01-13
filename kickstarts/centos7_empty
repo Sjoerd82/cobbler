@@ -1,5 +1,5 @@
 # Default Kickstart configuration
-# Date:   2015-09-11
+# Date:   2016-01-02
 # Author: S.R.G. Venema
 #
 # KVM requirements:
@@ -8,7 +8,7 @@
 # Requirements:
 #
 # Profile:
-#  OS: CentOS 6
+#  OS: CentOS 7
 
 $SNIPPET('header_std')
 
@@ -16,14 +16,11 @@ network  --bootproto=static --device=eth0 --gateway=172.16.8.1 --ip=$ip_address 
 
 $SNIPPET('lvm_4gb')
 
+# Packages
 %packages --nobase --excludedocs
 $SNIPPET('pkgs_default')
-$SNIPPET('pkgs_fileserver')
 %end
 
 %post --log=/var/tmp/kickstart-post.log --erroronfail
 $SNIPPET('post_default')
-$SNIPPET('samba')
-$SNIPPET('samba_shares_file')
-$SNIPPET('post_fileserver')
 %end

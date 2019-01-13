@@ -1,0 +1,33 @@
+# Transmission
+#
+# Date:   2018-02-25
+# Author: S.R.G. Venema
+#
+# KVM requirements:
+#  Disk: 100GB (vda)
+#
+# Requirements:
+#
+# Profile:
+#  OS: CentOS 7 w/ EPEL
+
+$SNIPPET('header_repo_test')
+
+network  --bootproto=static --device=ens18 --gateway=172.16.8.1 --ip=$ip_address --hostname=$hostname --nameserver=172.16.8.1 --netmask=255.255.248.0 --onboot=on
+
+$SNIPPET('lvm_90gb')
+
+# Packages
+%packages --nobase --excludedocs
+$SNIPPET('pkgs_default')
+$SNIPPET('pkgs_transmission')
+$SNIPPET('pkgs_samba')
+%end
+
+%post --log=/var/tmp/kickstart-post.log --erroronfail
+$SNIPPET('post_default')
+$SNIPPET('post_samba')
+$SNIPPET('samba_shares_transmission')
+$SNIPPET('post_transmission')
+
+%end

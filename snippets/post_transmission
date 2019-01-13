@@ -1,0 +1,135 @@
+################################################################################
+# TRANSMISSION
+#
+# Runs under the transmission user, created for us by the transmission package.
+# Server runs at port 9091
+#
+
+# For the Anaconda log...
+echo Starting TRANSMISSION >> ${KSLOG}
+
+# -----------------------------------------------------------------------------
+# Configuration
+# -----------------------------------------------------------------------------
+
+TS_DIR_COMPLETE="/mnt/smb/file.lan/torrents/completed"
+TS_DIR_INCOMPLETE="/torrents/incomplete"
+
+# Create folders (in case they don't exist..)
+mkdir -p ${TS_DIR_COMPLETE}
+mkdir -p ${TS_DIR_INCOMPLETE}
+
+# Override configuration (eliminate the -T no auth. switch):
+cat << 'EOF' > /etc/sysconfig/transmission-daemon
+DAEMON_ARGS="--blocklist -g $TRANSMISSION_HOME/.config/transmission-daemon"
+EOF
+
+# Configure settings.json
+
+mkdir -p /var/lib/transmission/.config/transmission-daemon
+
+cat << EOF > /var/lib/transmission/.config/transmission-daemon/settings.json
+{
+    "alt-speed-down": 50,
+    "alt-speed-enabled": false,
+    "alt-speed-time-begin": 540,
+    "alt-speed-time-day": 127,
+    "alt-speed-time-enabled": false,
+    "alt-speed-time-end": 1020,
+    "alt-speed-up": 50,
+    "bind-address-ipv4": "0.0.0.0",
+    "bind-address-ipv6": "::",
+    "blocklist-enabled": true,
+    "blocklist-url": "http://www.example.com/blocklist",
+    "cache-size-mb": 2,
+    "dht-enabled": true,
+    "download-dir": "$TS_DIR_COMPLETE",
+    "encryption": 1,
+    "idle-seeding-limit": 30,
+    "idle-seeding-limit-enabled": false,
+    "incomplete-dir": "$TS_DIR_INCOMPLETE",
+    "incomplete-dir-enabled": true,
+    "lazy-bitfield-enabled": true,
+    "lpd-enabled": false,
+    "message-level": 2,
+    "open-file-limit": 32,
+    "peer-limit-global": 240,
+    "peer-limit-per-torrent": 60,
+    "peer-port": 51413,
+    "peer-port-random-high": 65535,
+    "peer-port-random-low": 49152,
+    "peer-port-random-on-start": false,
+    "peer-socket-tos": 0,
+    "pex-enabled": true,
+    "port-forwarding-enabled": true,
+    "preallocation": 1,
+    "ratio-limit": 1.2,
+    "ratio-limit-enabled": true,
+    "rename-partial-files": true,
+    "rpc-authentication-required": true,
+    "rpc-bind-address": "0.0.0.0",
+    "rpc-enabled": true,
+    "rpc-password": "rachel",
+    "rpc-port": 9091,
+    "rpc-username": "admin",
+    "rpc-whitelist": "127.0.0.1,172.16.*.*",
+    "rpc-whitelist-enabled": false,
+    "script-torrent-done-enabled": true,
+    "script-torrent-done-filename": "/var/lib/transmission/.config/transmission-daemon/torrent-done.sh",
+    "speed-limit-down": 100,
+    "speed-limit-down-enabled": false,
+    "speed-limit-up": 100,
+    "speed-limit-up-enabled": true,
+    "start-added-torrents": true,
+    "trash-original-torrent-files": false,
+    "umask": 18,
+    "upload-slots-per-torrent": 14
+}
+EOF
+
+chmod -R 755 /var/lib/transmission ${TS_DIR_INCOMPLETE} ${TS_DIR_COMPLETE}
+chown -R transmission:transmission /var/lib/transmission ${TS_DIR_INCOMPLETE} ${TS_DIR_COMPLETE}
+
+#chmod +x /var/lib/transmission/.config/transmission-daemon/torrent-done.sh
+
+# Start transmission daemon on boot
+chkconfig transmission-daemon on
+
+groupadd -g 501 torrents
+usermod -a -G torrents transmission
+
+################################################################################
+# Mount statically, instead of using autofs:
+
+# For the Anaconda log...
+echo Starting AUTOFS >> ${KSLOG}
+
+cat << 'EOF' > /root/.secret.txt
+username=transmission
+password=rachel
+EOF
+
+cat << 'EOF' >> /etc/fstab
+//file.lan/torrents     /mnt/smb/file.lan/torrents      cifs    uid=transmission,iocharset=utf8,credentials=/root/.secret.txt   0 0
+#//file.lan/series      /mnt/smb/file.lan/series        cifs    guest,uid=1000,iocharset=utf8   0 0
+#//file.lan/music       /mnt/smb/file.lan/music         cifs    guest,uid=1000,iocharset=utf8   0 0
+EOF
+
+
+################################################################################
+# SAMBA AUTOFS
+#
+# Configure autofs
+#
+# mkdir -p /mnt/smb
+# 
+# echo "/mnt/smb /etc/auto.smb.top --timeout=600 --ghost" > /etc/auto.master
+# echo "* -fstype=autofs,-Dhost=& file:/etc/auto.smb.sub" > /etc/auto.smb.top
+# echo "* -fstype=cifs,rw,noperm,credentials=/root/secret.txt ://\${host}/&" > /etc/auto.smb.sub
+# 
+# #TODO: SET UID, IS NOW: nobody/nobody
+#
+# #chkconfig autofs on
+#
+# # Run at 4:30
+# # cat <(crontab -l) <(echo "30 4 * * * /var/lib/transmission/.config/transmission-daemon/removecompletedtorrents.sh") | crontab -
